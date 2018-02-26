@@ -1,0 +1,94 @@
+\documentclass{jsarticle}
+\usepackage{listings,jlisting}
+\begin{document}
+\title{PythonでMySQLを操作してみる}
+\author{2年情報工学科　山本　凜}
+\date{}
+\maketitle
+
+\section{Pythonとは・・・}
+Pythonとは、プログラミング言語の一つで、非常にシンプルに書くことができる言語です。そして、インデント(字下げ)をしないとまとまりとして認識されないので、きれいなソースを書くことができるという特徴があります。例えば、pythonで1と入力すれば“hello”,2と入力すれば“NIT,NC”と出してくれるプログラムを書くとします。この時のソースは、
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single]
+a=input()
+int(a)
+if(a==1):
+	print("hello")
+elif(a==2):
+	print("NIT,NC")
+ \end{lstlisting}
+とこんな感じになります。これを別のプログラミング言語であるJavaで書くと、
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single]
+package sample;
+import java.util.Scanner;
+public class Sample {
+	public static void main(String[] args) {
+		Scanner stdIn=new Scanner(System.in);
+		int a=stdIn.nextInt();
+		if(a==1) {
+			System.out.println("hello");
+		}else if(a==2) {
+			System.out.println("NIT,NC");
+		}
+	}
+}
+\end{lstlisting}
+とこんなに長くなるわけです。シンプルに書けるということは、簡単に読むことができるということでこれがプログラムを書くうえではかなり大切なことになります。\\
+　ちなみに、Pythonはよく話題になるディープラーニングなんかにもよく使われています。\footnote{詳しくはjokenにある「\verb|Pythonによるスクレイピング&機械学習|」という本を参照して、どうぞ}
+
+\section{PythonでMySQLを操作するには}
+　なぜそんなことするかと言うと、文化祭で恋人探しアンケートなるものをやります(詳しくはその時期に)。もちろんアンケートなので、アンケート結果をデータベース\footnote{Excelみたいなの(厳密には違う)}に記録する必要があります。そのデータベースの一つがMySQLと呼ばれるものです。\\
+　このMySQL、人力でコマンドを入力することもできるのですが、\footnote{例:select * from (テーブル名) これでテーブルにある全データが表示できる。}めっちゃめんどくさい・・・。そこで、Pythonを使って自動でデータベースに入れようという話になるわけです。\\
+　さて、MySQLをPythonで操作するには、mysql-connector-pythonをインポート\footnote{必要な機能を組み込む機能}する必要があります。
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single]
+pip install mysql-connector-python
+\end{lstlisting}
+とコマンドプロンプトに打ち込むことで、mysql-connector-pythonを使うことができるようになります。
+\section{実際に操作してみる}
+　では、恋人探しアンケートでMySQLを操作しなければならない場面は
+\begin{itemize}
+\item アンケート回答を保存する
+\item 結果を取り出す
+\item 答えたかどうかを判定する
+\end{itemize}
+といったときです。\\
+　アンケート回答を保存するには、
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single]
+def set_answer(name,gen,yo,target_gen,target_yo,q01,q02,q03,q04,q05,q06,q07,q08,q09,q10
+,q11,q12,q13,q14,q15):
+    # init
+    connect = connect_SQL()
+    cursor  = connect.cursor(buffered=True)
+    cursor.execute('select id from answer order by id desc limit 1')
+    before=cursor.fetchone()
+    cursor.execute("SELECT COUNT(*)from answer")
+    check=cursor.fetchone()
+    check=check[0]
+    if(check!=0):
+        before=before[0]
+    else:
+        before=0
+    cursor.execute('INSERT INTO answer(name ,gen ,yo ,target_gen ,target_yo ,q01 ,q02
+,q03 ,q04 ,q05 ,q06 ,q07 ,q08 ,q09 ,q10 ,q11 ,q12 ,q13 ,q14 , q15) VALUES (%s, %s, %s,
+ %s, %s, %s, %s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(name,gen,yo,
+target_gen,target_yo,q01,q02,q03,q04,q05,q06,q07,q08,q09,q10,q11,q12,q13,q14,q15));
+    connect.commit()
+    cursor.execute("SELECT id FROM answer order by id desc limit 1")
+    after=cursor.fetchone()
+    after=after[0]
+    if(after==before+1):
+        return after
+    else:
+        return 0
+    # finalize
+    cursor.close()
+    connect.close()
+\end{lstlisting}
+と見る気が失せるようなプログラムが書いてありますが、とりあえずこれがアンケートの回答をデータベースに保存するプログラムです。
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize, frame=single]
+cursor.execute("SQL文")
+\end{lstlisting}
+でSQL文を実行することができます。そのあと、connect.commit()で反映すると、いい感じに回答データをデータベースに入力することができます。
+\section{おわりに}
+これで、PythonでMySQLを操作することができます。jokenでは、情報科の授業でもやらないことができたりします\footnote{やろうと思えば俺TUEEEEもできる。やるのは自分次第だが}。さぁ、joken入ろう。
+\end{document}
